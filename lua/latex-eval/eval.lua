@@ -30,10 +30,9 @@ local command = { "python", plugin_path .. "../../main.py", latex_str }
       print("Error while evaluating LaTeX:")
       print(stderr)
 
-  vim.notify("err" .. stderr, vim.log.levels.INFO)
+    vim.notify("Error" .. stderr, vim.log.levels.INFO)
     else
       -- Copy result to clipboard
-  vim.notify("one" .. stdout, vim.log.levels.INFO)
       vim.fn.setreg("+", stdout)
       print("Evaluated result copied to clipboard: " .. stdout)
     end
