@@ -84,5 +84,5 @@ if __name__ == "__main__":
     result = evaluator.evaluate(latex_input)
     formatted_result = evaluator.post_process(result, dp=3)
 
-    print(formatted_result)
+    print("\\approx " + formatted_result)
 
