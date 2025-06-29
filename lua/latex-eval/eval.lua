@@ -7,15 +7,14 @@ local M = {}
 --   end)
 -- end
 local function async_shell_command(cmd, callback)
-  vim.notify("Running shell command: " .. table.concat(cmd, " "), vim.log.levels.INFO)
+  vim.notify("Running command: " .. table.concat(cmd, " "), vim.log.levels.INFO)
 
-  return vim.system(cmd, {}, function(obj)
-    vim.notify("Shell command completed", vim.log.levels.INFO)
-    vim.notify("Exit code: " .. tostring(obj.code), vim.log.levels.INFO)
-    vim.notify("Stdout: " .. tostring(obj.stdout), vim.log.levels.INFO)
-    vim.notify("Stderr: " .. tostring(obj.stderr), vim.log.levels.INFO)
+  return vim.system(cmd, {}, vim.schedule_wrap(function(obj)
+    vim.notify("Command completed with exit code: " .. tostring(obj.code), vim.log.levels.INFO)
+    vim.notify("stdout: " .. tostring(obj.stdout), vim.log.levels.INFO)
+    vim.notify("stderr: " .. tostring(obj.stderr), vim.log.levels.INFO)
     callback(obj.code, obj.stdout, obj.stderr)
-  end)
+  end))
 end
 
 
