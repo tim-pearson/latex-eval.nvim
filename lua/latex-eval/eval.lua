@@ -15,7 +15,6 @@ M.evaluate_latex = function(latex_str)
 
   async_shell_command(command, function(exit_code, stdout, stderr)
     if exit_code ~= 0 then
-  vim.notify("err1", vim.log.levels.INFO)
       print("Error while evaluating LaTeX:")
       print(stderr)
     else
