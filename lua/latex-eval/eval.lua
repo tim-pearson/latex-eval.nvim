@@ -19,7 +19,6 @@ M.evaluate_latex = function(latex_str)
       print("Error while evaluating LaTeX:")
       print(stderr)
     else
-    vim.notify("all gooo", vim.log.levels.INFO)
       -- Copy result to clipboard
       vim.fn.setreg("+", stdout)
       print("Evaluated result copied to clipboard: " .. stdout)
