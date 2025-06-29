@@ -29,6 +29,8 @@ local command = { "python", plugin_path .. "../../main.py", latex_str }
     if exit_code ~= 0 then
       print("Error while evaluating LaTeX:")
       print(stderr)
+
+  vim.notify("err" .. stderr, vim.log.levels.INFO)
     else
       -- Copy result to clipboard
   vim.notify("one" .. stdout, vim.log.levels.INFO)
