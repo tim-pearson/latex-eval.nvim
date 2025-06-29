@@ -1,11 +1,23 @@
 local M = {}
 
+-- local function async_shell_command(cmd, callback)
+--   -- Start the job without tmp file, just direct command
+--   return vim.system(cmd, {}, function(obj)
+--     callback(obj.code, obj.stdout, obj.stderr)
+--   end)
+-- end
 local function async_shell_command(cmd, callback)
-  -- Start the job without tmp file, just direct command
+  vim.notify("Running shell command: " .. table.concat(cmd, " "), vim.log.levels.INFO)
+
   return vim.system(cmd, {}, function(obj)
+    vim.notify("Shell command completed", vim.log.levels.INFO)
+    vim.notify("Exit code: " .. tostring(obj.code), vim.log.levels.INFO)
+    vim.notify("Stdout: " .. tostring(obj.stdout), vim.log.levels.INFO)
+    vim.notify("Stderr: " .. tostring(obj.stderr), vim.log.levels.INFO)
     callback(obj.code, obj.stdout, obj.stderr)
   end)
 end
+
 
 M.evaluate_latex = function(latex_str)
   -- Call your evaluator script with latex_str as argument
