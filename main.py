@@ -25,16 +25,12 @@ class LatexEvaluator:
         Returns:
             evaluated (float): numerical result
         """
-        # Parse LaTeX to SymPy expression
         expr = latex2sympy(latex_str)
 
-        # Substitute constants
         for const, value in self.constants.items():
             expr = expr.subs(symbols(const), value)
 
-        # Evaluate numerically
         evaluated = expr.evalf()
-
         return evaluated
 
     def format_scientific(self, value, dp=3):
@@ -49,12 +45,33 @@ class LatexEvaluator:
             str: formatted string
         """
         if value == 0:
-            return f"0.{'0'*dp}"
+            return "0"
 
         exponent = int('{:e}'.format(value).split('e')[1])
         mantissa = value / (10 ** exponent)
-        formatted = f"{mantissa:.{dp}f} \\times 10^{{{exponent}}}"
-        return formatted
+
+        if exponent == 0:
+            if mantissa.is_integer():
+                return f"{int(mantissa)}"
+            else:
+                return f"{mantissa:.{dp}f}"
+        else:
+            return f"{mantissa:.{dp}f} \\times 10^{{{exponent}}}"
+
+    def post_process(self, result, dp=3):
+        """
+        Applies post-processing formatting to evaluation result.
+
+        Args:
+            result (float or sympy number): evaluation result
+            dp (int): decimal places
+
+        Returns:
+            str: formatted output string
+        """
+        value = float(result)
+        return self.format_scientific(value, dp)
+
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
@@ -65,8 +82,7 @@ if __name__ == "__main__":
 
     evaluator = LatexEvaluator()
     result = evaluator.evaluate(latex_input)
-    formatted_result = evaluator.format_scientific(result, dp=3)
+    formatted_result = evaluator.post_process(result, dp=3)
 
-    print("Input LaTeX:", latex_input)
-    print("Evaluated result (rounded to 3 dp, scientific):", formatted_result)
+    print(formatted_result)
 
