@@ -22,7 +22,7 @@ M.evaluate_latex = function(latex_str)
   -- Call your evaluator script with latex_str as argument
 local plugin_path = debug.getinfo(1, 'S').source:sub(2):match("(.*/)")
 
-local command = { "python", plugin_path .. "./main.py", latex_str }
+local command = { "python", plugin_path .. "../../main.py", latex_str }
 
   vim.notify("one", vim.log.levels.INFO)
 
