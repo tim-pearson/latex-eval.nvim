@@ -11,11 +11,15 @@ M.evaluate_latex = function(latex_str)
   -- Call your evaluator script with latex_str as argument
   local command = { "python", "main.py", latex_str }
 
+  vim.notify("one", vim.log.levels.INFO)
+
   async_shell_command(command, function(exit_code, stdout, stderr)
     if exit_code ~= 0 then
+  vim.notify("err1", vim.log.levels.INFO)
       print("Error while evaluating LaTeX:")
       print(stderr)
     else
+    vim.notify("all gooo", vim.log.levels.INFO)
       -- Copy result to clipboard
       vim.fn.setreg("+", stdout)
       print("Evaluated result copied to clipboard: " .. stdout)
