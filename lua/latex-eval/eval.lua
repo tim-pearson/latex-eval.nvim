@@ -7,12 +7,12 @@ local M = {}
 --   end)
 -- end
 local function async_shell_command(cmd, callback)
-  vim.notify("Running command: " .. table.concat(cmd, " "), vim.log.levels.INFO)
+  -- vim.notify("Running command: " .. table.concat(cmd, " "), vim.log.levels.INFO)
 
   return vim.system(cmd, {}, vim.schedule_wrap(function(obj)
-    vim.notify("Command completed with exit code: " .. tostring(obj.code), vim.log.levels.INFO)
-    vim.notify("stdout: " .. tostring(obj.stdout), vim.log.levels.INFO)
-    vim.notify("stderr: " .. tostring(obj.stderr), vim.log.levels.INFO)
+    -- vim.notify("Command completed with exit code: " .. tostring(obj.code), vim.log.levels.INFO)
+    -- vim.notify("stdout: " .. tostring(obj.stdout), vim.log.levels.INFO)
+    -- vim.notify("stderr: " .. tostring(obj.stderr), vim.log.levels.INFO)
     callback(obj.code, obj.stdout, obj.stderr)
   end))
 end
@@ -24,7 +24,7 @@ local plugin_path = debug.getinfo(1, 'S').source:sub(2):match("(.*/)")
 
 local command = { "python", plugin_path .. "../../main.py", latex_str }
 
-  vim.notify("one", vim.log.levels.INFO)
+  -- vim.notify("one", vim.log.levels.INFO)
 
   async_shell_command(command, function(exit_code, stdout, stderr)
     if exit_code ~= 0 then
