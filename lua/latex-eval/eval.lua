@@ -24,7 +24,6 @@ local plugin_path = debug.getinfo(1, 'S').source:sub(2):match("(.*/)")
 
 local command = { "python", plugin_path .. "../../main.py", latex_str }
 
-  -- vim.notify("one", vim.log.levels.INFO)
 
   async_shell_command(command, function(exit_code, stdout, stderr)
     if exit_code ~= 0 then
@@ -32,6 +31,7 @@ local command = { "python", plugin_path .. "../../main.py", latex_str }
       print(stderr)
     else
       -- Copy result to clipboard
+  vim.notify("one" .. stdout, vim.log.levels.INFO)
       vim.fn.setreg("+", stdout)
       print("Evaluated result copied to clipboard: " .. stdout)
     end
