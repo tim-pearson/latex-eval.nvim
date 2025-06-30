@@ -1,6 +1,8 @@
 import sys
 from latex2sympy2 import latex2sympy
+from sympy import latex
 from sympy import symbols
+from sympy import simplify
 
 class LatexEvaluator:
     def __init__(self):
@@ -32,6 +34,20 @@ class LatexEvaluator:
 
         evaluated = expr.evalf()
         return evaluated
+
+    def symbolic_simplify(self, latex_str):
+        """
+        Simplifies a LaTeX math expression symbolically, preserving variables.
+
+        Args:
+            latex_str (str): LaTeX math expression
+
+        Returns:
+            sympy expression: simplified symbolic expression
+        """
+        expr = latex2sympy(latex_str)
+        simplified = simplify(expr)
+        return latex(simplified)
 
     def format_scientific(self, value, dp=3):
         """
@@ -75,14 +91,21 @@ class LatexEvaluator:
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("Usage: python evaluator.py '<latex_expression>'")
+        print("Usage:")
+        print("  python evaluator.py '<latex_expression>'         # Evaluate numerically")
+        print("  python evaluator.py symbolic '<latex_expression>' # Simplify symbolically")
         sys.exit(1)
 
-    latex_input = sys.argv[1]
-
     evaluator = LatexEvaluator()
-    result = evaluator.evaluate(latex_input)
-    formatted_result = evaluator.post_process(result, dp=3)
 
-    print(" \\approx " + formatted_result,end="")
+    if sys.argv[1] == "symbolic":
+        latex_input = sys.argv[2]
+        result = evaluator.symbolic_simplify(latex_input)
+        print(" = " + result)
+    else:
+        latex_input = sys.argv[1]
+        result = evaluator.evaluate(latex_input)
+        formatted_result = evaluator.post_process(result, dp=3)
+        print(" \\approx " + formatted_result, end="")
+
 

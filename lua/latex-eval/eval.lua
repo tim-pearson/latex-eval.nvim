@@ -1,40 +1,32 @@
 local M = {}
-
--- local function async_shell_command(cmd, callback)
---   -- Start the job without tmp file, just direct command
---   return vim.system(cmd, {}, function(obj)
---     callback(obj.code, obj.stdout, obj.stderr)
---   end)
--- end
 local function async_shell_command(cmd, callback)
-  -- vim.notify("Running command: " .. table.concat(cmd, " "), vim.log.levels.INFO)
 
   return vim.system(cmd, {}, vim.schedule_wrap(function(obj)
-    -- vim.notify("Command completed with exit code: " .. tostring(obj.code), vim.log.levels.INFO)
-    -- vim.notify("stdout: " .. tostring(obj.stdout), vim.log.levels.INFO)
-    -- vim.notify("stderr: " .. tostring(obj.stderr), vim.log.levels.INFO)
     callback(obj.code, obj.stdout, obj.stderr)
   end))
 end
 
 
-M.evaluate_latex = function(latex_str)
-  -- Call your evaluator script with latex_str as argument
-local plugin_path = debug.getinfo(1, 'S').source:sub(2):match("(.*/)")
-
-local command = { "python", plugin_path .. "../../main.py", latex_str }
-
+M.evaluate_latex = function(latex_str, symbolic)
+  local plugin_path = debug.getinfo(1, 'S').source:sub(2):match("(.*/)")
+  local mode = symbolic and "symbolic" or ""
+  local command = symbolic
+      and { "python", plugin_path .. "../../main.py", "symbolic", latex_str }
+      or  { "python", plugin_path .. "../../main.py", latex_str }
 
   async_shell_command(command, function(exit_code, stdout, stderr)
     if exit_code ~= 0 then
-      print("Error while evaluating LaTeX:")
-      print(stderr)
-
-    vim.notify("Error" .. stderr, vim.log.levels.INFO)
+      vim.notify("Error while evaluating LaTeX:\n" .. stderr, vim.log.levels.ERROR)
     else
-      -- Copy result to clipboard
-      vim.fn.setreg("+", stdout)
-      print("Evaluated result copied to clipboard: " .. stdout)
+      local result = stdout:gsub("%s+$", "")
+
+      local line = vim.api.nvim_get_current_line()
+      vim.api.nvim_set_current_line(line .. " " .. result)
+
+      vim.fn.setreg("+", result)
+
+      local mode_label = symbolic and "[Symbolic]" or "[Numeric]"
+      vim.notify("✔ " .. mode_label .. " Result: " .. result .. " (copied and inserted)", vim.log.levels.INFO)
     end
   end)
 end
