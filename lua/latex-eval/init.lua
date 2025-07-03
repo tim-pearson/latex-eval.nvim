@@ -38,7 +38,7 @@ function M.solve_visual()
 
   vim.ui.input({ prompt = "Solve for variable: " }, function(var)
     if var and var ~= "" then
-      eval.solve(selection, var)
+      eval.solve_latex(selection, var)
     else
       vim.notify("No variable provided", vim.log.levels.WARN)
     end
