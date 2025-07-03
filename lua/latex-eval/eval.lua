@@ -44,8 +44,8 @@ M.solve_latex = function(latex_str, var)
     else
       local result = stdout:gsub("%s+$", "")
 
-      local line = vim.api.nvim_get_current_line()
-      vim.api.nvim_set_current_line(line .. " " .. result)
+      local row = vim.api.nvim_win_get_cursor(0)[1]
+      vim.api.nvim_buf_set_lines(0, row, row, false, { result })
 
       vim.fn.setreg("+", result)
 
