@@ -31,5 +31,27 @@ M.evaluate_latex = function(latex_str, symbolic)
   end)
 end
 
+
+M.solve_latex = function(latex_str)
+  local plugin_path = debug.getinfo(1, 'S').source:sub(2):match("(.*/)")
+  local command = { "python", plugin_path .. "../../main.py", "solve", latex_str }
+
+  async_shell_command(command, function(exit_code, stdout, stderr)
+    if exit_code ~= 0 then
+      vim.notify("Error while evaluating LaTeX:\n" .. stderr, vim.log.levels.ERROR)
+    else
+      local result = stdout:gsub("%s+$", "")
+
+      local line = vim.api.nvim_get_current_line()
+      vim.api.nvim_set_current_line(line .. " " .. result)
+
+      vim.fn.setreg("+", result)
+
+      local mode_label = "[Solve]"
+      vim.notify("✔ " .. mode_label .. " Result: " .. result .. " (copied and inserted)", vim.log.levels.INFO)
+    end
+  end)
+end
+
 return M
 
