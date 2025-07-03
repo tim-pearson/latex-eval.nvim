@@ -19,7 +19,6 @@ M.evaluate_latex = function(latex_str, symbolic)
       vim.notify("Error while evaluating LaTeX:\n" .. stderr, vim.log.levels.ERROR)
     else
       local result = stdout:gsub("%s+$", "")
-      vim.notify("ERRRAAAAA" .. result, vim.log.levels.ERROR)
 
       local line = vim.api.nvim_get_current_line()
       vim.api.nvim_set_current_line(line .. " " .. result)
@@ -37,6 +36,7 @@ M.solve_latex = function(latex_str, var)
   local plugin_path = debug.getinfo(1, 'S').source:sub(2):match("(.*/)")
   local command = { "python", plugin_path .. "../../main.py", "solve", latex_str, var }
 
+      vim.notify("ERRRAAAAA" .. result, vim.log.levels.ERROR)
   async_shell_command(command, function(exit_code, stdout, stderr)
     if exit_code ~= 0 then
       vim.notify("Error while evaluating LaTeX:\n" .. stderr, vim.log.levels.ERROR)

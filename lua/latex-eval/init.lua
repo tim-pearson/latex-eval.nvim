@@ -36,6 +36,7 @@ function M.solve_visual()
     return
   end
 
+    vim.notify("No visual selection found to evaluate", vim.log.levels.ERROR)
   vim.ui.input({ prompt = "Solve for variable: " }, function(var)
     if var and var ~= "" then
       eval.solve_latex(selection, var)
@@ -45,3 +46,4 @@ function M.solve_visual()
   end)
 end
 
+return M
