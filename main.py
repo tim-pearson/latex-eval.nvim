@@ -97,7 +97,7 @@ if __name__ == "__main__":
         if len(sys.argv) < 4: # Now expecting 5 arguments: main.py, solve, LHS, RHS, variable
             print("Usage: python evaluator.py solve '<latex_lhs>'  '<variable_to_solve_for>'")
             sys.exit(1)
-        input = sys.argv[2].split("=")
+        input = sys.argv[2].replace("&", "").split("=")
         latex_lhs = input[0]
         latex_rhs = input[1]
         variable_to_solve_for = sys.argv[3]
