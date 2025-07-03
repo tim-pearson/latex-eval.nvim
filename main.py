@@ -97,14 +97,22 @@ if __name__ == "__main__":
         if len(sys.argv) < 4: # Now expecting 5 arguments: main.py, solve, LHS, RHS, variable
             print("Usage: python evaluator.py solve '<latex_lhs>'  '<variable_to_solve_for>'")
             sys.exit(1)
-        input = sys.argv[2].replace("&", "").split("=")
+        input = sys.argv[2]
+        aligned = False
+        if "&" in input :
+            input = input.replace("&", "").split("=")
+            aligned = True
+
         latex_lhs = input[0]
         latex_rhs = input[1]
         variable_to_solve_for = sys.argv[3]
 
         solved_latex = evaluator.solve_for_variable(latex_lhs, latex_rhs, variable_to_solve_for)
         if solved_latex:
-            print(f"{variable_to_solve_for} = {solved_latex}")
+            res = f"{variable_to_solve_for} = {solved_latex}"
+            if aligned:
+               res =  res.replace("=", "&=", 1)
+            print(res)
         else:
             print(f"Could not solve for {variable_to_solve_for} in the given equation.")
     else: # Default to numerical evaluation
