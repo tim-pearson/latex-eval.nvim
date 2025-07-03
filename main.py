@@ -94,12 +94,13 @@ if __name__ == "__main__":
         print(" = " + result)
     elif command == "solve":
         # *** MODIFIED ARGUMENT PARSING ***
-        if len(sys.argv) < 5: # Now expecting 5 arguments: main.py, solve, LHS, RHS, variable
-            print("Usage: python evaluator.py solve '<latex_lhs>' '<latex_rhs>' '<variable_to_solve_for>'")
+        if len(sys.argv) < 4: # Now expecting 5 arguments: main.py, solve, LHS, RHS, variable
+            print("Usage: python evaluator.py solve '<latex_lhs>'  '<variable_to_solve_for>'")
             sys.exit(1)
-        latex_lhs = sys.argv[2]
-        latex_rhs = sys.argv[3]
-        variable_to_solve_for = sys.argv[4]
+        input = sys.argv[2].split("=")
+        latex_lhs = input[0]
+        latex_rhs = input[1]
+        variable_to_solve_for = sys.argv[3]
 
         solved_latex = evaluator.solve_for_variable(latex_lhs, latex_rhs, variable_to_solve_for)
         if solved_latex:
