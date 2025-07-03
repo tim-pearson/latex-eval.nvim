@@ -36,7 +36,7 @@ M.solve_latex = function(latex_str, var)
   local plugin_path = debug.getinfo(1, 'S').source:sub(2):match("(.*/)")
   local command = { "python", plugin_path .. "../../main.py", "solve", latex_str, var }
 
-  vim.notify("args = " .. command, vim.log.levels.ERROR)
+  vim.notify("args = " .. latex_str .. "  " .. var, vim.log.levels.ERROR)
 
   async_shell_command(command, function(exit_code, stdout, stderr)
     if exit_code ~= 0 then
