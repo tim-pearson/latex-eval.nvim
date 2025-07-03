@@ -28,18 +28,20 @@ function M.evaluate_visual(symbolic)
     print("No visual selection found.")
   end
 end
-function M.solve_visual(variable)
+
+function M.solve_visual()
   local selection = get_visual_selection()
-  if selection then
-    eval.evaluate_latex(selection, variable)
-  else
+  if not selection then
     vim.notify("No visual selection found to evaluate", vim.log.levels.ERROR)
-
-    print("No visual selection found.")
+    return
   end
+
+  vim.ui.input({ prompt = "Solve for variable: " }, function(var)
+    if var and var ~= "" then
+      eval.solve(selection, var)
+    else
+      vim.notify("No variable provided", vim.log.levels.WARN)
+    end
+  end)
 end
-
-
-return M
-
 
