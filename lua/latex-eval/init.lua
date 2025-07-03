@@ -28,6 +28,17 @@ function M.evaluate_visual(symbolic)
     print("No visual selection found.")
   end
 end
+function M.solve_visual(variable)
+  local selection = get_visual_selection()
+  if selection then
+    eval.evaluate_latex(selection, variable)
+  else
+    vim.notify("No visual selection found to evaluate", vim.log.levels.ERROR)
+
+    print("No visual selection found.")
+  end
+end
+
 
 return M
 
