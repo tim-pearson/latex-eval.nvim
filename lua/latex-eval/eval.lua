@@ -26,7 +26,7 @@ M.evaluate_latex = function(latex_str, symbolic)
       vim.fn.setreg("+", result)
 
       local mode_label = symbolic and "[Symbolic]" or "[Numeric]"
-      vim.notify("✔ " .. mode_label .. " Result: " .. result .. " (copied and inserted)", vim.log.levels.INFO)
+      -- vim.notify("✔ " .. mode_label .. " Result: " .. result .. " (copied and inserted)", vim.log.levels.INFO)
     end
   end)
 end

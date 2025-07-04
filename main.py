@@ -118,5 +118,6 @@ if __name__ == "__main__":
     else: # Default to numerical evaluation
         latex_input = sys.argv[1]
         result = evaluator.evaluate(latex_input)
+        print(result)
         formatted_result = evaluator.post_process(result, dp=3)
         print(" \\approx " + formatted_result, end="")
