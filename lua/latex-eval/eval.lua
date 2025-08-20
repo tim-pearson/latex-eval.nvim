@@ -76,9 +76,9 @@ M.solve_latex = function(latex_str, var)
   end)
 end
 
-M.diff_latex = function(latex_str, var)
+M.diff_latex = function(latex_str, symbols, var)
   local plugin_path = debug.getinfo(1, 'S').source:sub(2):match("(.*/)")
-  local command = { "python", plugin_path .. "../../main.py", "diff", latex_str, var }
+  local command = { "python", plugin_path .. "../../main.py", "diff", latex_str, symbols, var }
 
 
   async_shell_command(command, function(exit_code, stdout, stderr)
