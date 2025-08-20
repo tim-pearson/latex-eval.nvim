@@ -1,11 +1,13 @@
 import sys
 from latex2sympy2 import latex2sympy
-from sympy import latex, symbols, simplify, Eq, solve
+from sympy import latex, symbols, simplify, Eq, solve, diff
+
 
 def strip_trailing_zeros(s: str) -> str:
-    if '.' in s:
-        s = s.rstrip('0').rstrip('.')
+    if "." in s:
+        s = s.rstrip("0").rstrip(".")
     return s
+
 
 class LatexEvaluator:
     def __init__(self):
@@ -13,7 +15,7 @@ class LatexEvaluator:
         self.set_default_constants()
 
     def set_default_constants(self):
-        self.constants['c'] = 3 * 10**8  # Speed of light constant
+        self.constants["c"] = 3 * 10**8  # Speed of light constant
 
     def evaluate(self, latex_str):
         expr = latex2sympy(latex_str)
@@ -41,20 +43,27 @@ class LatexEvaluator:
             return latex(solutions[0])
         return None
 
+    def differentiate(self, latex_str, variable_str):
+        """
+        Differentiate the LaTeX expression with respect to the given variable.
+        Returns the derivative as a LaTeX string.
+        """
+        expr = latex2sympy(latex_str)
+        var = symbols(variable_str)
+        derivative = diff(expr, var)
+        return f"\\frac{{d}}{{d{variable_str}}}\\left({latex(expr)}\\right) = {latex(derivative)}"
+
     def format_scientific(self, value: float, dp=3):
         if value == 0:
             return "0", True
-        exponent = int(f"{value:e}".split('e')[1])
-        mantissa = value / (10 ** exponent)
+        exponent = int(f"{value:e}".split("e")[1])
+        mantissa = value / (10**exponent)
 
         if abs(exponent) > 3:
-            # Scientific notation
-            mantissa_str = f"{mantissa:.{dp}f}".rstrip('0').rstrip('.')
+            mantissa_str = f"{mantissa:.{dp}f}".rstrip("0").rstrip(".")
             return f"{mantissa_str} \\times 10^{{{exponent}}}", False
         else:
-            # Normal notation with fixed decimal places
-            # If integer after rounding, return int string
-            if abs(value - round(value)) < 10**(-dp):
+            if abs(value - round(value)) < 10 ** (-dp):
                 return str(int(round(value))), True
             else:
                 normal_str = f"{value:.{dp}f}"
@@ -72,9 +81,18 @@ if __name__ == "__main__":
 
     if len(sys.argv) < 2:
         print("Usage:")
-        print("  python main.py '<latex_expression>'                              # Evaluate numerically")
-        print("  python main.py symbolic '<latex_expression>'                     # Simplify symbolically")
-        print("  python main.py solve '<latex_lhs>' '<latex_rhs>' '<variable>'    # Solve for variable")
+        print(
+            "  python main.py '<latex_expression>'                              # Evaluate numerically"
+        )
+        print(
+            "  python main.py symbolic '<latex_expression>'                     # Simplify symbolically"
+        )
+        print(
+            "  python main.py solve '<latex_lhs>' '<latex_rhs>' '<variable>'    # Solve for variable"
+        )
+        print(
+            "  python main.py diff '<latex_expression>' '<variable>'            # Differentiate expression"
+        )
         sys.exit(1)
 
     command = sys.argv[1]
@@ -86,19 +104,35 @@ if __name__ == "__main__":
         latex_input = sys.argv[2]
         result = evaluator.symbolic_simplify(latex_input)
         print(" = " + result)
+
     elif command == "solve":
         if len(sys.argv) < 5:
-            print("Usage: python main.py solve '<latex_lhs>' '<latex_rhs>' '<variable>'")
+            print(
+                "Usage: python main.py solve '<latex_lhs>' '<latex_rhs>' '<variable>'"
+            )
             sys.exit(1)
         latex_lhs = sys.argv[2]
         latex_rhs = sys.argv[3]
         variable_to_solve = sys.argv[4]
-
-        solution = evaluator.solve_for_variable(latex_lhs, latex_rhs, variable_to_solve)
+        solution = evaluator.solve_for_variable(
+            latex_lhs, latex_rhs, variable_to_solve
+        )
         if solution:
             print(f"{variable_to_solve} = {solution}")
         else:
             print(f"Could not solve for {variable_to_solve}.")
+
+    elif command == "diff":
+        if len(sys.argv) < 4:
+            print(
+                "Usage: python main.py diff '<latex_expression>' '<variable>'"
+            )
+            sys.exit(1)
+        latex_input = sys.argv[2]
+        variable = sys.argv[3]
+        derivative = evaluator.differentiate(latex_input, variable)
+        print(f"d/d{variable} = {derivative}")
+
     else:
         # Numerical evaluation
         latex_input = sys.argv[1]
@@ -106,4 +140,3 @@ if __name__ == "__main__":
         is_exact, formatted_result = evaluator.post_process(result, dp=3)
         prefix = " =" if is_exact else " \\approx"
         print(f"{prefix} {formatted_result}", end="")
-

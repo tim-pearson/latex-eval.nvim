@@ -45,4 +45,21 @@ function M.solve_visual()
   end)
 end
 
+function M.diff_visual()
+  local selection = get_visual_selection()
+  if not selection then
+    vim.notify("No visual selection found to differentiate", vim.log.levels.ERROR)
+    return
+  end
+
+  vim.ui.input({ prompt = "With resp: " }, function(var)
+    if var and var ~= "" then
+      eval.diff_latex(selection, var)
+    else
+      vim.notify("No variable provided", vim.log.levels.WARN)
+    end
+  end)
+end
+
+
 return M
