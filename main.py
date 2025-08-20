@@ -1,6 +1,8 @@
 import sys
 from latex2sympy2 import latex2sympy
 from sympy import latex, symbols, simplify, Eq, solve, diff
+import math
+import sympy
 
 
 def strip_trailing_zeros(s: str) -> str:
@@ -43,15 +45,25 @@ class LatexEvaluator:
             return latex(solutions[0])
         return None
 
-    def differentiate(self, latex_str, variable_str):
-        """
-        Differentiate the LaTeX expression with respect to the given variable.
-        Returns the derivative as a LaTeX string.
-        """
+    def differentiate(self, latex_str, symbols_list, variable_str):
+        # Define symbols dynamically
+        syms = sympy.symbols(" ".join(symbols_list))
+        
+        # Parse the LaTeX string into a sympy expression
         expr = latex2sympy(latex_str)
-        var = symbols(variable_str)
-        derivative = diff(expr, var)
-        return f"\\frac{{d}}{{d{variable_str}}}\\left({latex(expr)}\\right) = {latex(derivative)}"
+
+        # Replace 'e' with Euler's number
+        expr = expr.subs(sympy.Symbol("e"), sympy.E)
+
+        # Pick the variable to differentiate with respect to
+        var = sympy.Symbol(variable_str)
+
+        # Differentiate
+        derivative = sympy.diff(expr, var)
+
+        # Return the raw sympy string (same style as manual code)
+        return str(derivative)
+
 
     def format_scientific(self, value: float, dp=3):
         if value == 0:
@@ -123,15 +135,25 @@ if __name__ == "__main__":
             print(f"Could not solve for {variable_to_solve}.")
 
     elif command == "diff":
-        if len(sys.argv) < 4:
+        if len(sys.argv) < 5:
             print(
-                "Usage: python main.py diff '<latex_expression>' '<variable>'"
+                "Usage: python main.py diff '<latex_expression>' '<symbols_comma_separated>' '<variable>'"
             )
             sys.exit(1)
+
         latex_input = sys.argv[2]
-        variable = sys.argv[3]
-        derivative = evaluator.differentiate(latex_input, variable)
-        print(f"d/d{variable} = {derivative}")
+
+        symbols_list = [s.strip() for s in sys.argv[3].split(" ")]
+
+        # Variable to differentiate with respect to
+        variable = sys.argv[4]
+
+        # Call the updated differentiate function
+        derivative = evaluator.differentiate(
+            latex_input, symbols_list, variable
+        )
+
+        print(derivative)
 
     else:
         # Numerical evaluation
