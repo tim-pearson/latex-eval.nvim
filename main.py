@@ -85,7 +85,7 @@ class LatexEvaluator:
         expr = replace_constants(expr)
         var = sympy.Symbol(variable_str)
         derivative = sympy.diff(expr, var)
-        return str(derivative)
+        return latex(derivative)
 
     def format_scientific(self, value: float, dp=3):
         if value == 0:
