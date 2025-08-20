@@ -79,13 +79,37 @@ class LatexEvaluator:
             return latex(solutions[0])
         return None
 
+    # def differentiate(self, latex_str, symbols_list, variable_str):
+    #     syms = sympy.symbols(" ".join(symbols_list))
+    #     expr = latex2sympy(latex_str)
+    #     expr = replace_constants(expr)
+    #     var = sympy.Symbol(variable_str)
+    #     derivative = sympy.diff(expr, var)
+    #     return latex(derivative)
+
     def differentiate(self, latex_str, symbols_list, variable_str):
+        # Define symbols dynamically
         syms = sympy.symbols(" ".join(symbols_list))
-        expr = latex2sympy(latex_str)
-        expr = replace_constants(expr)
+
+        # Replace constants like e, pi, etc.
+        latex_str = latex_str.strip()
         var = sympy.Symbol(variable_str)
-        derivative = sympy.diff(expr, var)
-        return latex(derivative)
+
+        # If the LaTeX string contains '=' → treat it as equation
+        if "=" in latex_str:
+            lhs_str, rhs_str = latex_str.split("=", 1)
+            lhs = latex2sympy(lhs_str.strip())
+            rhs = latex2sympy(rhs_str.strip())
+            rhs = replace_constants(rhs)
+
+            derivative = sympy.diff(rhs, var)
+            return f"\\frac{{d}}{{d{latex(var)}}}({latex(lhs)}) = {latex(derivative)}"
+        else:
+            expr = latex2sympy(latex_str)
+            expr = replace_constants(expr)
+            derivative = sympy.diff(expr, var)
+            return latex(derivative)
+
 
     def format_scientific(self, value: float, dp=3):
         if value == 0:

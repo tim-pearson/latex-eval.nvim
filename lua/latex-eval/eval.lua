@@ -80,23 +80,19 @@ M.diff_latex = function(latex_str, symbols, var)
   local plugin_path = debug.getinfo(1, 'S').source:sub(2):match("(.*/)")
   local command = { "python", plugin_path .. "../../main.py", "diff", latex_str, symbols, var }
 
-
   async_shell_command(command, function(exit_code, stdout, stderr)
     if exit_code ~= 0 then
       vim.notify("Error while differentiating LaTeX:\n" .. stderr, vim.log.levels.ERROR)
     else
       local result = stdout:gsub("%s+$", "")
 
-      local row = vim.api.nvim_win_get_cursor(0)[1]
-      vim.api.nvim_buf_set_lines(0, row, row, false, { result })
-
+      -- copy to clipboard only
       vim.fn.setreg("+", result)
 
       local mode_label = "[Differentiate]"
-      vim.notify("✔ " .. mode_label .. " Result: " .. result .. " (copied and inserted)", vim.log.levels.INFO)
+      vim.notify("✔ " .. mode_label .. " Result copied to clipboard: " .. result, vim.log.levels.INFO)
     end
   end)
 end
-
 
 return M
