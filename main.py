@@ -1,7 +1,6 @@
 import sys
 from latex2sympy2 import latex2sympy
-from sympy import latex, symbols, simplify, Eq, solve, diff
-import math
+from sympy import latex, symbols, simplify, Eq, solve
 import sympy
 
 
@@ -9,6 +8,37 @@ def strip_trailing_zeros(s: str) -> str:
     if "." in s:
         s = s.rstrip("0").rstrip(".")
     return s
+
+
+# 🔢 Constants & functions mapping
+CONSTANTS_MAP = {
+    "e": sympy.E,
+    "pi": sympy.pi,
+    "π": sympy.pi,
+    "i": sympy.I,
+    "j": sympy.I,
+    "oo": sympy.oo,  # infinity
+    "∞": sympy.oo,
+    "gamma": sympy.EulerGamma,
+    "φ": sympy.GoldenRatio,
+    "phi": sympy.GoldenRatio,
+}
+
+# Functions Sympy already supports, but we map some aliases
+FUNCTIONS_MAP = {
+    "ln": sympy.log,  # ln(x) -> log(x)
+    "exp": sympy.exp,
+    "abs": sympy.Abs,
+    "Re": sympy.re,
+    "Im": sympy.im,
+}
+
+
+def replace_constants(expr):
+    """Replace common math constants in a sympy expression."""
+    for k, v in CONSTANTS_MAP.items():
+        expr = expr.subs(sympy.Symbol(k), v)
+    return expr
 
 
 class LatexEvaluator:
@@ -21,12 +51,14 @@ class LatexEvaluator:
 
     def evaluate(self, latex_str):
         expr = latex2sympy(latex_str)
+        expr = replace_constants(expr)
         for const, value in self.constants.items():
             expr = expr.subs(symbols(const), value)
         return expr.evalf()
 
     def symbolic_simplify(self, latex_str):
         expr = latex2sympy(latex_str)
+        expr = replace_constants(expr)
         simplified = simplify(expr)
         return latex(simplified)
 
@@ -34,6 +66,8 @@ class LatexEvaluator:
         try:
             lhs_expr = latex2sympy(latex_lhs_str)
             rhs_expr = latex2sympy(latex_rhs_str)
+            lhs_expr = replace_constants(lhs_expr)
+            rhs_expr = replace_constants(rhs_expr)
             equation_expr = Eq(lhs_expr, rhs_expr)
         except Exception as e:
             print(f"Error parsing LaTeX: {e}")
@@ -46,24 +80,12 @@ class LatexEvaluator:
         return None
 
     def differentiate(self, latex_str, symbols_list, variable_str):
-        # Define symbols dynamically
         syms = sympy.symbols(" ".join(symbols_list))
-        
-        # Parse the LaTeX string into a sympy expression
         expr = latex2sympy(latex_str)
-
-        # Replace 'e' with Euler's number
-        expr = expr.subs(sympy.Symbol("e"), sympy.E)
-
-        # Pick the variable to differentiate with respect to
+        expr = replace_constants(expr)
         var = sympy.Symbol(variable_str)
-
-        # Differentiate
         derivative = sympy.diff(expr, var)
-
-        # Return the raw sympy string (same style as manual code)
         return str(derivative)
-
 
     def format_scientific(self, value: float, dp=3):
         if value == 0:
@@ -103,7 +125,7 @@ if __name__ == "__main__":
             "  python main.py solve '<latex_lhs>' '<latex_rhs>' '<variable>'    # Solve for variable"
         )
         print(
-            "  python main.py diff '<latex_expression>' '<variable>'            # Differentiate expression"
+            "  python main.py diff '<latex_expression>' '<symbols>' '<variable>' # Differentiate expression"
         )
         sys.exit(1)
 
@@ -137,22 +159,15 @@ if __name__ == "__main__":
     elif command == "diff":
         if len(sys.argv) < 5:
             print(
-                "Usage: python main.py diff '<latex_expression>' '<symbols_comma_separated>' '<variable>'"
+                "Usage: python main.py diff '<latex_expression>' '<symbols>' '<variable>'"
             )
             sys.exit(1)
-
         latex_input = sys.argv[2]
-
         symbols_list = [s.strip() for s in sys.argv[3].split(" ")]
-
-        # Variable to differentiate with respect to
         variable = sys.argv[4]
-
-        # Call the updated differentiate function
         derivative = evaluator.differentiate(
             latex_input, symbols_list, variable
         )
-
         print(derivative)
 
     else:

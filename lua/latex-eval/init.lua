@@ -52,14 +52,20 @@ function M.diff_visual()
     return
   end
 
-  vim.ui.input({ prompt = "With resp: " }, function(var)
-    if var and var ~= "" then
-      eval.diff_latex(selection, var)
-    else
-      vim.notify("No variable provided", vim.log.levels.WARN)
+  vim.ui.input({ prompt = "Symbols (space separated): " }, function(symbols)
+    if not symbols or symbols == "" then
+      vim.notify("No symbols provided", vim.log.levels.WARN)
+      return
     end
+
+    vim.ui.input({ prompt = "Differentiate with respect to: " }, function(var)
+      if var and var ~= "" then
+        eval.diff_latex(selection, symbols, var)
+      else
+        vim.notify("No variable provided", vim.log.levels.WARN)
+      end
+    end)
   end)
 end
-
 
 return M
