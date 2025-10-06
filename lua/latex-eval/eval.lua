@@ -56,8 +56,17 @@ end
 
 M.solve_latex = function(latex_str, var)
   local plugin_path = debug.getinfo(1, 'S').source:sub(2):match("(.*/)")
-  local command = { "python", plugin_path .. "../../main.py", "solve", latex_str, var }
+  local lhs, rhs = latex_str:match("^(.-)=(.+)$")
 
+  if not lhs or not rhs then
+    vim.notify("Equation must contain '=' to solve (e.g. 'x+3=0')", vim.log.levels.ERROR)
+    return
+  end
+
+  lhs = lhs:gsub("%s+", "")
+  rhs = rhs:gsub("%s+", "")
+
+  local command = { "python", plugin_path .. "../../main.py", "solve", lhs, rhs, var }
 
   async_shell_command(command, function(exit_code, stdout, stderr)
     if exit_code ~= 0 then
