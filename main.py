@@ -161,6 +161,7 @@ if __name__ == "__main__":
             sys.exit(1)
         latex_input = sys.argv[2]
         result = evaluator.symbolic_simplify(latex_input)
+        result = result.replace(r'\bar{h}', r'\hbar')
         print(" = " + result)
 
     elif command == "solve":
