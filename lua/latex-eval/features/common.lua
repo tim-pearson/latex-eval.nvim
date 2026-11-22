@@ -47,6 +47,9 @@ function M.run(operation, selection, options, on_success)
   if options.variable then
     request.variable = options.variable
   end
+  if options.order then
+    request.order = options.order
+  end
 
   runner().run(request, function(error, response)
     if error then

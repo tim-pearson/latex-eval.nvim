@@ -1,6 +1,6 @@
 # latex-eval.nvim
 
-`latex-eval.nvim` evaluates, simplifies, solves, differentiates, previews, and
+`latex-eval.nvim` evaluates, simplifies, solves, differentiates, aligns, and
 stores LaTeX math while editing Markdown and LaTeX source.
 
 It is designed to work alongside your existing Markdown rendering setup. It does
@@ -8,6 +8,9 @@ not render math and it does not replace `mdmath.nvim` or Kitty. `mdmath.nvim`
 remains responsible for rendering; `latex-eval.nvim` only reads and modifies the
 underlying Markdown source. When the plugin changes the buffer, an existing
 Markdown renderer can update normally.
+
+There is intentionally no custom preview window: `mdmath.nvim` does not currently
+render math inside floating windows, so a source-only preview was not kept.
 
 Requires Neovim 0.10 or newer.
 
@@ -28,7 +31,8 @@ Requires Neovim 0.10 or newer.
 - Isolated Python environment with pinned dependencies.
 - Configurable commands, keymaps, result behavior, and definition paths.
 - Optional Treesitter-assisted math detection.
-- Optional Unicode text prettification for previews (no image rendering).
+- Join separate `$$` blocks into `align*`, and split them back again.
+- Edit stored definitions in a Markdown buffer and save with `:w`.
 
 ---
 
@@ -82,8 +86,7 @@ If `python3 -m venv` is unavailable on your system, install the OS package for
 | Evaluate | Numerically evaluates an expression when possible; returns symbolic output otherwise. |
 | Simplify | Symbolically simplifies with SymPy. |
 | Solve | Solves an equation. The target variable is inferred when there is exactly one unknown; otherwise you are prompted. |
-| Differentiate | Differentiates with respect to an inferred variable, or an explicitly supplied variable. For equation input, the left-hand side is preserved and the right-hand side is differentiated. |
-| Preview | Shows the detected math source in a floating window. |
+| Differentiate | Differentiates with respect to an inferred variable, or an explicitly supplied variable. Uses Leibniz or prime notation and supports higher-order derivatives. |
 | Define | Stores a value such as `x=4` or a function such as `f(x)=x^2`. |
 
 Built-in evaluation constants include `c` (speed of light), `e`, `pi`, `i`,
@@ -105,12 +108,12 @@ Defaults use `<leader>b`:
 | `<leader>br` | Solve |
 | `<leader>bd` | Store definition |
 | `<leader>bf` | Differentiate |
-| `<leader>bp` | Preview |
+| `<leader>bj` | Join/split aligned math |
 | `<leader>bl` | List/manage definitions |
 | `<leader>bh` | Health check |
 
-Evaluate, simplify, solve, differentiate, define, and preview work in normal and
-visual mode. Menu, definition management, and health check are normal-mode
+Evaluate, simplify, solve, differentiate, define, and join/split work in normal
+and visual mode. Menu, definition management, and health check are normal-mode
 mappings. Existing mappings are not overwritten; a warning is shown instead.
 
 ---
@@ -123,12 +126,14 @@ mappings. Existing mappings are not overwritten; a warning is shown instead.
 | `:LatexEvalEvaluate [expr]` | Evaluate the argument, or detected math when omitted. |
 | `:LatexEvalSimplify [expr]` | Simplify the argument, or detected math. |
 | `:LatexEvalSolve [variable]` | Solve detected math, optionally for the given variable. |
-| `:LatexEvalDifferentiate [variable]` | Differentiate detected math, optionally for the given variable. |
-| `:LatexEvalPreview [expr]` | Preview the argument, or detected math. |
+| `:LatexEvalDifferentiate [variable] [order]` | Differentiate detected math, optionally for the given variable or derivative order. |
 | `:LatexEvalDefine [expr]` | Store an argument, or detected math. |
 | `:LatexEvalDefine global` | Store detected math in global definitions. |
 | `:LatexEvalDefine project` | Store detected math in project-local definitions. |
-| `:LatexEvalDefs` | List definitions and delete selected entries. |
+| `:LatexEvalJoinMath` | Join separate `$$` blocks into an `align*` environment. |
+| `:LatexEvalSplitMath` | Split an `align`/`gather` environment into separate `$$` blocks. |
+| `:LatexEvalToggleAlign` | Toggle between separate blocks and an aligned environment. |
+| `:LatexEvalDefs` | Open an editable Markdown buffer of all definitions. |
 | `:LatexEvalInstall` | Install or repair the isolated Python environment. |
 | `:LatexEvalHealth` | Report Python version, venv path, dependency versions, imports, and backend status. |
 
@@ -170,15 +175,17 @@ registers, or modifying the buffer.
 ## Results and safe replacement
 
 By default, results are shown in a floating window and copied to the `+`
-clipboard. The source buffer is not modified automatically.
+clipboard. When a result has a left-hand side, the right-hand side is copied
+automatically. The source buffer is not modified automatically.
 
 In the result window:
 
 | Key | Action |
 | --- | --- |
-| `y` | Copy the result |
+| `y` | Copy the full displayed result |
+| `Y` | Copy only the right-hand side |
 | `i` | Insert the displayed result after the source line |
-| `r` | Replace the original expression with the raw result |
+| `r` | Replace the original expression with the result |
 | `q` / `<Esc>` | Close |
 
 Replacement targets only the expression source range. It preserves:
@@ -228,25 +235,62 @@ require("latex-eval").setup({
 
 ---
 
-## Preview
+## Derivative notation
 
-`:LatexEvalPreview` and `<leader>bp` open a simple floating text preview of the
-detected expression. This is a source preview, not an image renderer. Your
-existing `mdmath.nvim` / Kitty setup remains the rendering system.
+Differentiation uses readable notation in the result window while keeping source
+replacement safe:
 
-Optional text-only Unicode prettification:
+| Input | Result window | `r` replacement |
+| --- | --- | --- |
+| `y = 3x` | `\frac{dy}{dx} = 3` | `y = 3` |
+| `f(x) = 4x` | `f'(x) = 4` | `f(x) = 4` |
+| `f(x) = 4x`, order 2 | `f''(x) = 0` | `f(x) = 0` |
+| `\frac{dy}{dx} = 3x` | `\frac{d^{2}y}{dx^{2}} = 3` | full derivative equation |
+| `f'(x) = 3x` | `f''(x) = 3` | full derivative equation |
 
-```lua
-require("latex-eval").setup({
-  preview = {
-    unicode = true,
-  },
-})
+Use `:LatexEvalDifferentiate x 2` or
+`require("latex-eval").differentiate({ variable = "x", order = 2 })` for
+higher-order derivatives. Existing Leibniz and prime notation is incremented when
+the equation left-hand side is already a derivative. Accepted existing forms
+include `\frac{dy}{dx}`, `\frac{d^2y}{dx^2}`, `\frac{dy^2}{dx^2}`,
+`\frac{d^2y}{d^2x}`, `y'`, `y''`, `f'(x)`, `f''(x)`, and `f^{(n)}(x)`.
+
+`Y` copies just the result side (for example `3`, `4`, or `2 x`), while `y` copies
+the full equation shown in the window.
+
+## Aligned math blocks
+
+`:LatexEvalJoinMath`, `:LatexEvalSplitMath`, and `:LatexEvalToggleAlign`
+(`<leader>bj`) convert between independent display blocks and one aligned
+environment.
+
+Joining:
+
+```markdown
+$$
+y = 3x
+$$
+
+$$
+f(x) = x^2
+$$
 ```
 
-No image rendering backend is included or required.
+becomes:
 
----
+```markdown
+$$
+\begin{align*}
+y = 3x \\
+f(x) = x^2
+\end{align*}
+$$
+```
+
+Splitting reverses it. Join requires one expression per `$$` block so the
+conversion remains reversible. Surrounding prose is protected: the command
+refuses to join or split a mixed region. Visual mode operates on the selected
+lines; normal mode operates on the math around the cursor.
 
 ## Stored definitions
 
@@ -298,8 +342,10 @@ Examples:
 
 Definitions are applied to evaluate, simplify, solve, and differentiate.
 
-Manage them with `<leader>bl` or `:LatexEvalDefs`. Existing definitions are never
-overwritten without confirmation by default.
+Manage them with `<leader>bl` or `:LatexEvalDefs`. This opens a Markdown buffer
+listing global and project definitions. Edit the lines and write the buffer with
+`:w` to save; the JSON files are updated atomically. Existing definitions are
+never overwritten by the normal define command without confirmation.
 
 Definitions are parsed as math, never executed as Python.
 
@@ -321,7 +367,7 @@ require("latex-eval").setup({
       solve = "r",
       define = "d",
       differentiate = "f",
-      preview = "p",
+      align = "j",
       definitions = "l",
       health = "h",
     },
@@ -348,11 +394,6 @@ require("latex-eval").setup({
     max_width = 80,
     max_height = 20,
     border = "rounded",
-  },
-  preview = {
-    unicode = false,
-    show_source = false,
-    title = "LaTeX preview",
   },
   definitions = {
     enabled = true,
@@ -415,7 +456,9 @@ require("latex-eval").simplify()
 require("latex-eval").solve()
 require("latex-eval").differentiate()
 require("latex-eval").define()
-require("latex-eval").preview()
+require("latex-eval").toggle_align()
+require("latex-eval").join_math()
+require("latex-eval").split_math()
 require("latex-eval").definitions()
 require("latex-eval").menu()
 require("latex-eval").health()

@@ -195,15 +195,22 @@ function M.show_result(response, options)
   local source_win = options.win or vim.api.nvim_get_current_win()
   local source_buf = options.bufnr or vim.api.nvim_win_get_buf(source_win)
   local display = response
-  local replacement = response
+  local result = response
   local kind = nil
+  local meta = {}
   if type(response) == "table" then
     display = response.display or response.result or ""
-    replacement = response.result or display
+    result = response.result or display
     kind = response.kind
+    meta = type(response.meta) == "table" and response.meta or {}
   end
   display = tostring(display or "")
-  replacement = tostring(replacement or "")
+  result = tostring(result or "")
+  local whole = display
+  local right = tostring(meta.rhs or meta.right or result or display)
+  local replace_value = tostring(
+    meta.replace or meta.replacement or result or display
+  )
   if display == "" then
     M.warn("The backend returned an empty result")
     return
@@ -237,7 +244,7 @@ function M.show_result(response, options)
     end
   end
 
-  copy(replacement)
+  copy(right)
 
   if settings.actions and buffer then
     local function close()
@@ -245,7 +252,7 @@ function M.show_result(response, options)
     end
 
     vim.keymap.set("n", "y", function()
-      copy(replacement)
+      copy(right)
       pcall(vim.fn.setreg, '"', replacement)
       M.info("Copied result")
       close()
@@ -281,7 +288,7 @@ function M.show_result(response, options)
         M.warn("No source range is available for replacement")
         return
       end
-      local ok, error_message = pcall(M.apply_inline, replacement, {
+      local ok, error_message = pcall(M.apply_inline, replace_value, {
         selection = selection,
         inline_mode = "replace",
         bufnr = source_buf,
@@ -302,7 +309,7 @@ function M.show_result(response, options)
   end
 
   if settings.inline then
-    local inline_text = settings.inline_mode == "replace" and replacement
+    local inline_text = settings.inline_mode == "replace" and replace_value
       or display
     local ok, error_message = pcall(M.apply_inline, inline_text, {
       selection = options.selection,

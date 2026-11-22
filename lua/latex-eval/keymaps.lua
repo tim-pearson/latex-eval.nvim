@@ -64,11 +64,11 @@ local function action_specs()
       end,
     },
     {
-      name = "preview",
+      name = "align",
       modes = { "n", "x" },
-      description = "Preview LaTeX math",
+      description = "Join or split aligned math",
       run = function()
-        require("latex-eval").preview()
+        require("latex-eval").toggle_align()
       end,
     },
     {

@@ -81,27 +81,29 @@ function M.setup()
   })
 
   vim.api.nvim_create_user_command("LatexEvalDifferentiate", function(command)
-    local variable = vim.trim(command.args or "")
+    local arguments = vim.split(vim.trim(command.args or ""), "%s+")
+    local variable = arguments[1]
+    if variable == "" then
+      variable = nil
+    end
+    local order = nil
+    if arguments[2] and arguments[2] ~= "" then
+      order = tonumber(arguments[2])
+      if not order or order < 1 then
+        ui().error("Derivative order must be a positive integer")
+        return
+      end
+    end
     local selected = selection_module().get()
     if selected then
       run_feature("differentiate", selected, {
-        variable = variable ~= "" and variable or nil,
+        variable = variable,
+        order = order,
       })
     end
   end, {
-    nargs = "?",
-    desc = "Differentiate detected math, optionally for the given variable",
-  })
-
-  vim.api.nvim_create_user_command("LatexEvalPreview", function(command)
-    local selected = from_argument(command.args)
-      or selection_module().get()
-    if selected then
-      require("latex-eval.preview").open(selected)
-    end
-  end, {
     nargs = "*",
-    desc = "Preview a LaTeX expression in a floating window",
+    desc = "Differentiate detected math, optionally: [variable] [order]",
   })
 
   vim.api.nvim_create_user_command("LatexEvalDefine", function(command)
@@ -124,9 +126,27 @@ function M.setup()
   })
 
   vim.api.nvim_create_user_command("LatexEvalDefs", function()
-    require("latex-eval.features.define").manage()
+    require("latex-eval.definitions_buffer").open()
   end, {
-    desc = "List and delete stored latex-eval definitions",
+    desc = "Edit stored latex-eval definitions in a Markdown buffer",
+  })
+
+  vim.api.nvim_create_user_command("LatexEvalJoinMath", function()
+    require("latex-eval.transform").join()
+  end, {
+    desc = "Join separate $$ math blocks into an align* environment",
+  })
+
+  vim.api.nvim_create_user_command("LatexEvalSplitMath", function()
+    require("latex-eval.transform").split()
+  end, {
+    desc = "Split an align/gather environment into separate $$ blocks",
+  })
+
+  vim.api.nvim_create_user_command("LatexEvalToggleAlign", function()
+    require("latex-eval.transform").toggle()
+  end, {
+    desc = "Toggle between separate $$ blocks and an aligned environment",
   })
 
   vim.api.nvim_create_user_command("LatexEvalInstall", function()

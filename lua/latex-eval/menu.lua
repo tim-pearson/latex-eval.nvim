@@ -38,13 +38,6 @@ local actions = {
     end,
   },
   {
-    label = "Preview",
-    description = "show a floating equation preview",
-    run = function()
-      require("latex-eval").preview()
-    end,
-  },
-  {
     label = "Store definition",
     description = "remember x=4 or f(x)=x^2",
     run = function()
@@ -52,10 +45,17 @@ local actions = {
     end,
   },
   {
-    label = "Manage definitions",
-    description = "list and delete stored definitions",
+    label = "Join / split math",
+    description = "toggle aligned multi-line math",
     run = function()
-      require("latex-eval.features.define").manage()
+      require("latex-eval").toggle_align()
+    end,
+  },
+  {
+    label = "Manage definitions",
+    description = "edit stored definitions in a Markdown buffer",
+    run = function()
+      require("latex-eval").definitions()
     end,
   },
   {

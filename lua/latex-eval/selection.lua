@@ -568,6 +568,10 @@ function M.detect_at_cursor()
   return nil
 end
 
+function M.get_visual_raw()
+  return visual_selection()
+end
+
 function M.get(options)
   options = options or {}
   local selection = visual_selection()

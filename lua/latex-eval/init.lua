@@ -64,16 +64,26 @@ function M.define(options)
   run_feature("define", options)
 end
 
-function M.preview(options)
+function M.preview()
   ensure()
-  options = options or {}
-  local selection = options.selection
-  if not selection then
-    selection = selection_module().get()
-  end
-  if selection then
-    require("latex-eval.preview").open(selection)
-  end
+  ui().warn(
+    "Preview was removed because mdmath.nvim does not render floating windows"
+  )
+end
+
+function M.toggle_align()
+  ensure()
+  require("latex-eval.transform").toggle()
+end
+
+function M.join_math()
+  ensure()
+  require("latex-eval.transform").join()
+end
+
+function M.split_math()
+  ensure()
+  require("latex-eval.transform").split()
 end
 
 function M.menu()

@@ -73,53 +73,8 @@ function M.run(selection, options)
   end)
 end
 
-local function entry_label(entry)
-  if entry.kind == "value" then
-    return string.format(
-      "[%s] value  %s = %s",
-      entry.scope,
-      entry.name,
-      entry.value
-    )
-  end
-  return string.format(
-    "[%s] function  %s(%s) = %s",
-    entry.scope,
-    entry.name,
-    table.concat(entry.variables or {}, ", "),
-    entry.expression
-  )
-end
-
 function M.manage()
-  local entries = store().list()
-  if #entries == 0 then
-    ui().info("No stored definitions yet")
-    return
-  end
-
-  vim.ui.select(entries, {
-    prompt = "latex-eval definitions (select one to delete):",
-    format_item = entry_label,
-  }, function(choice)
-    if not choice then
-      return
-    end
-    store().delete(choice.kind, choice.name, choice.scope, function(ok)
-      if ok then
-        ui().info(
-          "Deleted "
-            .. choice.kind
-            .. " '"
-            .. choice.name
-            .. "' from "
-            .. choice.scope
-            .. " definitions"
-        )
-        M.manage()
-      end
-    end)
-  end)
+  require("latex-eval.definitions_buffer").open()
 end
 
 return M

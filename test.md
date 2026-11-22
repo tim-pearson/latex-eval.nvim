@@ -29,3 +29,23 @@ Evaluate `f(x) + 1` after storing the definitions:
 $$
 f(x) + 1
 $$
+
+Differentiation examples:
+
+$$
+y = 3x
+$$
+
+$$
+f(x) = 4x
+$$
+
+Separate blocks to join with `<leader>bj`:
+
+$$
+y = 3x
+$$
+
+$$
+f(x) = x^2
+$$
