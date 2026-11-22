@@ -1,0 +1,3 @@
+latex2sympy2==1.9.1
+sympy==1.14.0
+antlr4-python3-runtime==4.7.2

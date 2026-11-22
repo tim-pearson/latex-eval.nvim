@@ -1,0 +1,12 @@
+{
+  "values": {
+    "x": "4",
+    "a": "\\frac{1}{2}"
+  },
+  "functions": {
+    "f": {
+      "variables": ["x"],
+      "expression": "x^2"
+    }
+  }
+}

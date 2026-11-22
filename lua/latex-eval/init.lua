@@ -1,71 +1,145 @@
 local M = {}
 
-local eval = require("latex-eval.eval") -- renamed share.lua to eval.lua
+local initialized = false
 
-local function get_visual_selection()
-  local mode = vim.fn.mode()
-  if not (mode == "v" or mode == "V" or mode == "␖") then
-    return nil
+local function config()
+  return require("latex-eval.config")
+end
+
+local function selection_module()
+  return require("latex-eval.selection")
+end
+
+local function features()
+  return require("latex-eval.features")
+end
+
+local function ui()
+  return require("latex-eval.ui")
+end
+
+function M.setup(options)
+  config().setup(options)
+  require("latex-eval.commands").setup()
+  require("latex-eval.keymaps").setup()
+  initialized = true
+  vim.g.latex_eval_configured = 1
+  return M
+end
+
+local function ensure()
+  if not initialized then
+    M.setup(nil)
   end
+end
 
-  local original_clip = vim.fn.getreg('"')
-  local original_clip_type = vim.fn.getregtype('"')
+local function run_feature(name, options)
+  ensure()
+  options = options or {}
+  local feature = features().get(name)
+  if not feature then
+    ui().error("Unknown latex-eval feature: " .. name)
+    return
+  end
+  feature.run(options.selection, options)
+end
 
-  vim.cmd("silent normal! y")
-  local selection = vim.fn.getreg('"')
-  vim.fn.setreg('"', original_clip, original_clip_type)
+function M.evaluate(options)
+  run_feature("evaluate", options)
+end
 
-  return selection
+function M.simplify(options)
+  run_feature("simplify", options)
+end
+
+function M.solve(options)
+  run_feature("solve", options)
+end
+
+function M.differentiate(options)
+  run_feature("differentiate", options)
+end
+
+function M.define(options)
+  run_feature("define", options)
+end
+
+function M.preview(options)
+  ensure()
+  options = options or {}
+  local selection = options.selection
+  if not selection then
+    selection = selection_module().get()
+  end
+  if selection then
+    require("latex-eval.preview").open(selection)
+  end
+end
+
+function M.menu()
+  ensure()
+  require("latex-eval.menu").open()
+end
+
+function M.definitions()
+  ensure()
+  require("latex-eval.features.define").manage()
+end
+
+function M.health(callback)
+  ensure()
+  local python = require("latex-eval.python")
+  if callback then
+    python.health(callback)
+    return
+  end
+  python.health(function(report, ok)
+    ui().open_float(report, {
+      title = ok and "latex-eval health" or "latex-eval health (issues)",
+      max_width = 100,
+    })
+  end)
+end
+
+function M.install(callback)
+  ensure()
+  require("latex-eval.python").install(callback)
+end
+
+function M.run(name, selection, options)
+  ensure()
+  options = options or {}
+  options.selection = selection or options.selection
+  run_feature(name, options)
 end
 
 function M.evaluate_visual(symbolic)
-  local selection = get_visual_selection()
-  if selection then
-    eval.evaluate_latex(selection, symbolic)
-  else
-    vim.notify("No visual selection found to evaluate", vim.log.levels.ERROR)
-
-    print("No visual selection found.")
+  ensure()
+  local selection = selection_module().get()
+  if not selection then
+    return
   end
+  features()
+    .get(symbolic and "simplify" or "evaluate")
+    .run(selection, {})
 end
 
 function M.solve_visual()
-  local selection = get_visual_selection()
+  ensure()
+  local selection = selection_module().get()
   if not selection then
-    vim.notify("No visual selection found to solve", vim.log.levels.ERROR)
     return
   end
-
-  vim.ui.input({ prompt = "Solve for variable: " }, function(var)
-    if var and var ~= "" then
-      eval.solve_latex(selection, var)
-    else
-      vim.notify("No variable provided", vim.log.levels.WARN)
-    end
-  end)
+  features().get("solve").run(selection, {})
 end
 
 function M.diff_visual()
-  local selection = get_visual_selection()
+  ensure()
+  local selection = selection_module().get()
   if not selection then
-    vim.notify("No visual selection found to differentiate", vim.log.levels.ERROR)
     return
   end
-
-  vim.ui.input({ prompt = "Symbols (space separated): " }, function(symbols)
-    if not symbols or symbols == "" then
-      vim.notify("No symbols provided", vim.log.levels.WARN)
-      return
-    end
-
-    vim.ui.input({ prompt = "Differentiate with respect to: " }, function(var)
-      if var and var ~= "" then
-        eval.diff_latex(selection, symbols, var)
-      else
-        vim.notify("No variable provided", vim.log.levels.WARN)
-      end
-    end)
-  end)
+  features().get("differentiate").run(selection, {})
 end
 
 return M
