@@ -38,7 +38,7 @@ def test_legacy_solve_cli():
 def test_legacy_diff_cli():
     process = run_cli("diff", "x^2", "x", "x")
     assert process.returncode == 0
-    assert process.stdout.strip() == r"\frac{d}{dx}\left(x^2\right) = 2 x"
+    assert process.stdout.strip() == "2 x"
 
 
 def test_root_main_shim_legacy_cli():

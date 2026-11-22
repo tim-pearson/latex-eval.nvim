@@ -81,29 +81,16 @@ function M.setup()
   })
 
   vim.api.nvim_create_user_command("LatexEvalDifferentiate", function(command)
-    local arguments = vim.split(vim.trim(command.args or ""), "%s+")
-    local variable = arguments[1]
-    if variable == "" then
-      variable = nil
-    end
-    local order = nil
-    if arguments[2] and arguments[2] ~= "" then
-      order = tonumber(arguments[2])
-      if not order or order < 1 then
-        ui().error("Derivative order must be a positive integer")
-        return
-      end
-    end
+    local variable = vim.trim(command.args or "")
     local selected = selection_module().get()
     if selected then
       run_feature("differentiate", selected, {
-        variable = variable,
-        order = order,
+        variable = variable ~= "" and variable or nil,
       })
     end
   end, {
-    nargs = "*",
-    desc = "Differentiate detected math, optionally: [variable] [order]",
+    nargs = "?",
+    desc = "Differentiate detected math, optionally for the given variable",
   })
 
   vim.api.nvim_create_user_command("LatexEvalDefine", function(command)

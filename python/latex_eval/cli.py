@@ -47,10 +47,7 @@ def main(argv=None):
         if command == "diff":
             if not _require(arguments, 4, USAGE):
                 return 1
-            order = int(arguments[4]) if len(arguments) > 4 else 1
-            result = engine.differentiate(
-                arguments[1], variable=arguments[3], order=order
-            )
+            result = engine.differentiate(arguments[1], variable=arguments[3])
             print(result["display"])
             return 0
 

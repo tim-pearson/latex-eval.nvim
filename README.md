@@ -87,7 +87,7 @@ If `python3 -m venv` is unavailable on your system, install the OS package for
 | Evaluate | Numerically evaluates an expression when possible; returns symbolic output otherwise. |
 | Simplify | Symbolically simplifies with SymPy. |
 | Solve | Solves an equation. The target variable is inferred when there is exactly one unknown; otherwise you are prompted. |
-| Differentiate | Differentiates with respect to an inferred variable, or an explicitly supplied variable. Uses Leibniz or prime notation and supports higher-order derivatives. |
+| Differentiate | Differentiates with respect to an inferred variable, or an explicitly supplied variable. For equation input, the left-hand side is preserved and the right-hand side is differentiated. |
 | Define | Stores a value such as `x=4` or a function such as `f(x)=x^2`. |
 
 Built-in evaluation constants include `c` (speed of light), `e`, `pi`, `i`,
@@ -132,7 +132,7 @@ mappings. Existing mappings are not overwritten; a warning is shown instead.
 | `:LatexEvalEvaluate [expr]` | Evaluate the argument, or detected math when omitted. |
 | `:LatexEvalSimplify [expr]` | Simplify the argument, or detected math. |
 | `:LatexEvalSolve [variable]` | Solve detected math, optionally for the given variable. |
-| `:LatexEvalDifferentiate [variable] [order]` | Differentiate detected math, optionally for the given variable or derivative order. |
+| `:LatexEvalDifferentiate [variable]` | Differentiate detected math, optionally for the given variable. |
 | `:LatexEvalDefine [expr]` | Store an argument, or detected math. |
 | `:LatexEvalDefine global` | Store detected math in global definitions. |
 | `:LatexEvalDefine project` | Store detected math in project-local definitions. |
@@ -182,7 +182,7 @@ registers, or modifying the buffer.
 ## Results and safe replacement
 
 By default, results are shown in a floating window and copied to the `+`
-clipboard. When a result has a left-hand side, the right-hand side is copied
+clipboard. When a result exposes a right-hand side, that value is copied
 automatically. The source buffer is not modified automatically.
 
 In the result window:
@@ -190,7 +190,7 @@ In the result window:
 | Key | Action |
 | --- | --- |
 | `y` | Copy the full displayed result |
-| `Y` | Copy only the right-hand side |
+| `Y` | Copy only the right-hand side when available |
 | `i` | Insert the displayed result after the source line |
 | `r` | Replace the source with the full displayed result |
 | `R` | Replace only the source right-hand side |
@@ -247,28 +247,25 @@ require("latex-eval").setup({
 
 ---
 
-## Derivative notation
+## Differentiation
 
-Differentiation uses readable notation in the result window while keeping source
-replacement safe:
+Differentiation infers the variable when it is unambiguous. When multiple symbols
+are present, use the variable dropdown or pass the variable explicitly:
 
-| Input | Result window | `r` replacement | `R` replacement |
-| --- | --- | --- | --- |
-| `y = 3x` | `\frac{dy}{dx} = 3` | `\frac{dy}{dx} = 3` | `y = 3` |
-| `f(x) = 4x` | `f'(x) = 4` | `f'(x) = 4` | `f(x) = 4` |
-| `f(x) = 4x`, order 2 | `f''(x) = 0` | `f''(x) = 0` | `f(x) = 0` |
-| `\frac{dy}{dx} = 3x` | `\frac{d^{2}y}{dx^{2}} = 3` | full derivative equation | full derivative equation |
-| `f'(x) = 3x` | `f''(x) = 3` | full derivative equation | full derivative equation |
+```vim
+:LatexEvalDifferentiate x
+```
 
-Use `:LatexEvalDifferentiate x 2` or
-`require("latex-eval").differentiate({ variable = "x", order = 2 })` for
-higher-order derivatives. Existing Leibniz and prime notation is incremented when
-the equation left-hand side is already a derivative. Accepted existing forms
-include `\frac{dy}{dx}`, `\frac{d^2y}{dx^2}`, `\frac{dy^2}{dx^2}`,
-`\frac{d^2y}{d^2x}`, `y'`, `y''`, `f'(x)`, `f''(x)`, and `f^{(n)}(x)`.
+For equation input, the original left-hand side is kept and the right-hand side is
+differentiated:
 
-`Y` copies just the result side (for example `3`, `4`, or `2 x`), while `y` copies
-the full equation shown in the window.
+- `y = 3x` with variable `x` → `y = 3`
+- `f(x) = 4x` with variable `x` → `f(x) = 4`
+- `y = x^2` with variable `x` → `y = 2 x`
+
+For a plain expression, the result is just the derivative:
+
+- `x^2` → `2 x`
 
 ## Aligned math blocks
 

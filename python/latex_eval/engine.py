@@ -10,11 +10,6 @@ from .errors import (
     ParseError,
 )
 from .formatting import fix_latex_output, post_process
-from .notation import (
-    build_expression_notation,
-    build_lhs_notation,
-    parse_derivative_lhs,
-)
 from .parsing import (
     expand_function_calls,
     parse_definition,
@@ -117,14 +112,6 @@ class Engine:
                 pass
         return Symbol(value)
 
-    def _infer_differentiation_variable(self, lhs, rhs, variable=None):
-        if variable:
-            return self._symbol_from_name(variable)
-        rhs_symbols = rhs.free_symbols
-        if len(rhs_symbols) == 1:
-            return next(iter(rhs_symbols))
-        return self._infer_variable([lhs, rhs])
-
     def _infer_variable(self, expressions, variable=None):
         if variable:
             return self._symbol_from_name(variable)
@@ -216,83 +203,31 @@ class Engine:
             },
         }
 
-    def differentiate(
-        self, text, variable=None, order=1, definitions=None, options=None
-    ):
-        options = options or {}
-        try:
-            order = int(order)
-        except (TypeError, ValueError):
-            raise OperationError("Derivative order must be an integer") from None
-        if order < 1:
-            raise OperationError("Derivative order must be at least 1")
-
+    def differentiate(self, text, variable=None, definitions=None, options=None):
         equation = split_equation(text)
         if equation:
-            lhs_text, rhs_text = equation
-            parsed_notation = parse_derivative_lhs(lhs_text)
-            rhs = self.parse_expression(rhs_text, definitions)
-
-            if parsed_notation:
-                target = None
-                if variable:
-                    target = self._symbol_from_name(variable)
-                elif parsed_notation.get("independent"):
-                    target = self._symbol_from_name(parsed_notation["independent"])
-                if target is None:
-                    target = self._infer_variable([rhs])
-            else:
-                lhs = self.parse_expression(lhs_text, definitions)
-                target = self._infer_differentiation_variable(lhs, rhs, variable)
-
-            target_latex = fix_latex_output(latex(target))
-            derivative = diff(rhs, target, order)
-            rhs_latex = fix_latex_output(latex(derivative))
-            notation = build_lhs_notation(lhs_text, target_latex, order)
-            display = f"{notation['display']} = {rhs_latex}"
-            if notation["replaces_lhs"]:
-                replacement = display
-            else:
-                lhs_source = strip_math_delimiters(lhs_text).strip()
-                replacement = f"{lhs_source} = {rhs_latex}"
-
+            lhs_text, _rhs_text = equation
+            lhs, rhs = self._parse_equation(text, definitions)
+            target = self._infer_variable([lhs, rhs], variable)
+            derivative = diff(rhs, target)
+            lhs_display = fix_latex_output(strip_math_delimiters(lhs_text).strip())
+            result = f"{lhs_display} = {fix_latex_output(latex(derivative))}"
             return {
-                "result": display,
-                "display": display,
+                "result": result,
+                "display": result,
                 "kind": "derivative",
-                "meta": {
-                    "variable": str(target),
-                    "order": notation["order"],
-                    "notation": notation["kind"],
-                    "lhs": notation["display"],
-                    "rhs": rhs_latex,
-                    "replace": replacement,
-                    "replace_full": display,
-                    "replace_rhs": replacement,
-                },
+                "meta": {"variable": str(target)},
             }
 
         expression = self.parse_expression(text, definitions)
         target = self._infer_variable([expression], variable)
-        target_latex = fix_latex_output(latex(target))
-        derivative = diff(expression, target, order)
-        rhs_latex = fix_latex_output(latex(derivative))
-        notation = build_expression_notation(text, target_latex, order)
-        display = f"{notation['display']} = {rhs_latex}"
+        derivative = diff(expression, target)
+        result = fix_latex_output(latex(derivative))
         return {
-            "result": display,
-            "display": display,
+            "result": result,
+            "display": result,
             "kind": "derivative",
-            "meta": {
-                "variable": str(target),
-                "order": notation["order"],
-                "notation": notation["kind"],
-                "lhs": notation["display"],
-                "rhs": rhs_latex,
-                "replace": rhs_latex,
-                "replace_full": display,
-                "replace_rhs": rhs_latex,
-            },
+            "meta": {"variable": str(target)},
         }
 
     def define(self, text, definitions=None, options=None):
