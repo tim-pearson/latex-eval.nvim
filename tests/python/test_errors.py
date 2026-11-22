@@ -51,7 +51,7 @@ def test_invalid_definitions_type_is_rejected():
         {
             "operation": "evaluate",
             "expression": "x",
-            "definitions": [],
+            "definitions": [1],
         }
     )
     assert response["ok"] is False
@@ -73,3 +73,40 @@ def test_ping_operation():
         "kind": "ping",
         "meta": {},
     }
+
+
+def test_empty_array_options_are_accepted():
+    response = handle_request(
+        {
+            "operation": "evaluate",
+            "expression": "1+1",
+            "options": [],
+        }
+    )
+    assert response["ok"] is True
+    assert response["result"] == "2"
+
+
+def test_empty_array_definitions_are_accepted():
+    response = handle_request(
+        {
+            "operation": "evaluate",
+            "expression": "1+1",
+            "definitions": {"values": [], "functions": []},
+            "options": [],
+        }
+    )
+    assert response["ok"] is True
+    assert response["result"] == "2"
+
+
+def test_non_empty_array_options_are_rejected():
+    response = handle_request(
+        {
+            "operation": "evaluate",
+            "expression": "1+1",
+            "options": [1],
+        }
+    )
+    assert response["ok"] is False
+    assert response["error"]["code"] == "INVALID_REQUEST"

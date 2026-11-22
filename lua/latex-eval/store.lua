@@ -10,8 +10,15 @@ local function ui()
   return require("latex-eval.ui")
 end
 
+local function empty_object()
+  if vim.empty_dict then
+    return vim.empty_dict()
+  end
+  return {}
+end
+
 local function empty()
-  return { values = {}, functions = {} }
+  return { values = empty_object(), functions = empty_object() }
 end
 
 local function normalize(data)

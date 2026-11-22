@@ -52,6 +52,13 @@ function M.run(request, callback, options)
   callback = callback or function() end
   options = options or {}
 
+  local function ensure_empty_object(value)
+    if type(value) == "table" and next(value) == nil and vim.empty_dict then
+      return vim.empty_dict()
+    end
+    return value
+  end
+
   local function execute()
     if
       not options.no_definitions
@@ -62,6 +69,19 @@ function M.run(request, callback, options)
       if collect_ok and definitions then
         request.definitions = definitions
       end
+    end
+
+    if type(request.options) == "table" and next(request.options) == nil then
+      request.options = nil
+    end
+
+    if type(request.definitions) == "table" then
+      request.definitions.values = ensure_empty_object(
+        request.definitions.values or {}
+      )
+      request.definitions.functions = ensure_empty_object(
+        request.definitions.functions or {}
+      )
     end
 
     local encoded_ok, payload = pcall(vim.json.encode, request)

@@ -39,8 +39,11 @@ function M.run(operation, selection, options, on_success)
   local request = {
     operation = operation,
     expression = resolved.text,
-    options = options.operation_options or {},
   }
+  local operation_options = options.operation_options
+  if type(operation_options) == "table" and next(operation_options) ~= nil then
+    request.options = operation_options
+  end
   if options.variable then
     request.variable = options.variable
   end

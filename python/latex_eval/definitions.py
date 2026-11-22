@@ -13,6 +13,10 @@ def normalize_definitions(raw):
 
     values = raw.get("values") or {}
     functions = raw.get("functions") or {}
+    if isinstance(values, list) and not values:
+        values = {}
+    if isinstance(functions, list) and not functions:
+        functions = {}
     if not isinstance(values, dict):
         raise DefinitionError("Definition values must be an object")
     if not isinstance(functions, dict):

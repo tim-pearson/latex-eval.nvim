@@ -112,3 +112,8 @@ def test_fixture_definitions_are_valid():
     fixture = Path(__file__).resolve().parents[1] / "fixtures" / "definitions.json"
     definitions = json.loads(fixture.read_text())
     assert Engine().evaluate("f(x)+a", definitions=definitions)["result"] == "16.5"
+
+
+def test_normalize_accepts_empty_list_maps():
+    definitions = normalize_definitions({"values": [], "functions": []})
+    assert definitions == {"values": {}, "functions": {}}

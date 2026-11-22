@@ -54,12 +54,18 @@ def handle_request(payload):
             raise RequestError("Request is missing a non-empty string 'expression'")
 
         definitions = request.get("definitions")
+        if isinstance(definitions, list) and not definitions:
+            definitions = {}
         if definitions is not None and not isinstance(definitions, dict):
             raise RequestError("'definitions' must be an object")
 
         options = request.get("options")
+        if isinstance(options, list) and not options:
+            options = {}
         if options is not None and not isinstance(options, dict):
             raise RequestError("'options' must be an object")
+        request["options"] = options
+        request["definitions"] = definitions
 
         engine = Engine()
         with redirect_stdout(sys.stderr):
