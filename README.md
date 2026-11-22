@@ -185,7 +185,8 @@ In the result window:
 | `y` | Copy the full displayed result |
 | `Y` | Copy only the right-hand side |
 | `i` | Insert the displayed result after the source line |
-| `r` | Replace the original expression with the result |
+| `r` | Replace the source with the full displayed result |
+| `R` | Replace only the source right-hand side |
 | `q` / `<Esc>` | Close |
 
 Replacement targets only the expression source range. It preserves:
@@ -240,13 +241,13 @@ require("latex-eval").setup({
 Differentiation uses readable notation in the result window while keeping source
 replacement safe:
 
-| Input | Result window | `r` replacement |
-| --- | --- | --- |
-| `y = 3x` | `\frac{dy}{dx} = 3` | `y = 3` |
-| `f(x) = 4x` | `f'(x) = 4` | `f(x) = 4` |
-| `f(x) = 4x`, order 2 | `f''(x) = 0` | `f(x) = 0` |
-| `\frac{dy}{dx} = 3x` | `\frac{d^{2}y}{dx^{2}} = 3` | full derivative equation |
-| `f'(x) = 3x` | `f''(x) = 3` | full derivative equation |
+| Input | Result window | `r` replacement | `R` replacement |
+| --- | --- | --- | --- |
+| `y = 3x` | `\frac{dy}{dx} = 3` | `\frac{dy}{dx} = 3` | `y = 3` |
+| `f(x) = 4x` | `f'(x) = 4` | `f'(x) = 4` | `f(x) = 4` |
+| `f(x) = 4x`, order 2 | `f''(x) = 0` | `f''(x) = 0` | `f(x) = 0` |
+| `\frac{dy}{dx} = 3x` | `\frac{d^{2}y}{dx^{2}} = 3` | full derivative equation | full derivative equation |
+| `f'(x) = 3x` | `f''(x) = 3` | full derivative equation | full derivative equation |
 
 Use `:LatexEvalDifferentiate x 2` or
 `require("latex-eval").differentiate({ variable = "x", order = 2 })` for
@@ -281,13 +282,15 @@ becomes:
 ```markdown
 $$
 \begin{align*}
-y = 3x \\
-f(x) = x^2
+y &= 3x \\
+f(x) &= x^2
 \end{align*}
 $$
 ```
 
-Splitting reverses it. Join requires one expression per `$$` block so the
+Join inserts `&` before a top-level `=` when the row is not already aligned.
+Splitting removes that auto-inserted alignment so plain equations round-trip.
+Join requires one expression per `$$` block so the
 conversion remains reversible. Surrounding prose is protected: the command
 refuses to join or split a mixed region. Visual mode operates on the selected
 lines; normal mode operates on the math around the cursor.

@@ -208,8 +208,11 @@ function M.show_result(response, options)
   result = tostring(result or "")
   local whole = display
   local right = tostring(meta.rhs or meta.right or result or display)
-  local replace_value = tostring(
-    meta.replace or meta.replacement or result or display
+  local replace_full = tostring(
+    meta.replace_full or meta.replacement or result or display
+  )
+  local replace_rhs = tostring(
+    meta.replace_rhs or meta.replace or meta.replacement or result or display
   )
   if display == "" then
     M.warn("The backend returned an empty result")
@@ -288,14 +291,14 @@ function M.show_result(response, options)
         M.warn("No source range is available for replacement")
         return
       end
-      local ok, error_message = pcall(M.apply_inline, replace_value, {
+      local ok, error_message = pcall(M.apply_inline, replace_full, {
         selection = selection,
         inline_mode = "replace",
         bufnr = source_buf,
         win = source_win,
       })
       if ok then
-        M.info("Replaced the source expression")
+        M.info("Replaced the source with the full result")
         close()
       else
         M.warn("Could not replace expression: " .. tostring(error_message))
@@ -304,12 +307,37 @@ function M.show_result(response, options)
       buffer = buffer,
       silent = true,
       nowait = true,
-      desc = "Replace source expression with latex-eval result",
+      desc = "Replace source with the full latex-eval result",
+    })
+
+    vim.keymap.set("n", "R", function()
+      local selection = options.selection
+      if not selection or not selection.range then
+        M.warn("No source range is available for replacement")
+        return
+      end
+      local ok, error_message = pcall(M.apply_inline, replace_rhs, {
+        selection = selection,
+        inline_mode = "replace",
+        bufnr = source_buf,
+        win = source_win,
+      })
+      if ok then
+        M.info("Replaced the source right-hand side")
+        close()
+      else
+        M.warn("Could not replace expression: " .. tostring(error_message))
+      end
+    end, {
+      buffer = buffer,
+      silent = true,
+      nowait = true,
+      desc = "Replace only the right-hand side of the source",
     })
   end
 
   if settings.inline then
-    local inline_text = settings.inline_mode == "replace" and replace_value
+    local inline_text = settings.inline_mode == "replace" and replace_rhs
       or display
     local ok, error_message = pcall(M.apply_inline, inline_text, {
       selection = options.selection,

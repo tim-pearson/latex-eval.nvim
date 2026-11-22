@@ -267,6 +267,8 @@ class Engine:
                     "lhs": notation["display"],
                     "rhs": rhs_latex,
                     "replace": replacement,
+                    "replace_full": display,
+                    "replace_rhs": replacement,
                 },
             }
 
@@ -288,6 +290,8 @@ class Engine:
                 "lhs": notation["display"],
                 "rhs": rhs_latex,
                 "replace": rhs_latex,
+                "replace_full": display,
+                "replace_rhs": rhs_latex,
             },
         }
 

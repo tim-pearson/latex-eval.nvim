@@ -140,6 +140,46 @@ local function split_aligned_rows(content)
   return rows
 end
 
+local function align_row(row)
+  if row:find("&", 1, true) then
+    return row
+  end
+
+  local depth = 0
+  local index = 1
+  while index <= #row do
+    local character = row:sub(index, index)
+    if character == "\\" then
+      index = index + 2
+    elseif character == "{" then
+      depth = depth + 1
+      index = index + 1
+    elseif character == "}" then
+      depth = math.max(depth - 1, 0)
+      index = index + 1
+    elseif character == "=" and depth == 0 then
+      local lhs = trim(row:sub(1, index - 1))
+      local rhs = trim(row:sub(index + 1))
+      if lhs ~= "" and rhs ~= "" then
+        return lhs .. " &= " .. rhs
+      end
+      return row
+    else
+      index = index + 1
+    end
+  end
+
+  return row
+end
+
+local function unalign_row(row)
+  local lhs, rhs = row:match("^(.-)%s*&%s*=%s*(.*)$")
+  if lhs and rhs and not lhs:find("&", 1, true) and not rhs:find("&", 1, true) then
+    return trim(lhs) .. " = " .. trim(rhs)
+  end
+  return row
+end
+
 function M._join_text(text, indent)
   local blocks = display_contents(text)
   if #blocks < 2 then
@@ -171,7 +211,7 @@ function M._join_text(text, indent)
     if content:find("\n", 1, true) then
       return nil, "Join requires one expression per $$ block"
     end
-    rows[#rows + 1] = content
+    rows[#rows + 1] = align_row(content)
   end
 
   local lines = { "$$", "\\begin{align*}" }
@@ -232,7 +272,7 @@ function M._split_text(text, indent)
   for _, row in ipairs(split_aligned_rows(content)) do
     local value = trim(row)
     if value ~= "" then
-      rows[#rows + 1] = value
+      rows[#rows + 1] = unalign_row(value)
     end
   end
   if #rows == 0 then
