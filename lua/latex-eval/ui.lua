@@ -189,6 +189,65 @@ function M.apply_inline(text, options)
   return true
 end
 
+local function closing_math_line(line, from_col)
+  local trimmed = vim.trim(line)
+  if trimmed == "$$" or trimmed == "\\]" or trimmed == "\\)" then
+    return true
+  end
+  if trimmed:match("^\\end{") then
+    return true
+  end
+  local rest = from_col and line:sub(from_col + 1) or line
+  return rest:find("$$", 1, true) ~= nil
+    or rest:find("\\)", 1, true) ~= nil
+    or rest:find("\\]", 1, true) ~= nil
+    or rest:find("\\end{", 1, true) ~= nil
+end
+
+local function insert_row_after_math(buffer, selection)
+  local lines = vim.api.nvim_buf_get_lines(buffer, 0, -1, false)
+  local end_row = #lines - 1
+  local end_col = nil
+  if selection and selection.range then
+    end_row = selection.range.end_row
+    end_col = selection.range.end_col
+  else
+    end_row = vim.api.nvim_win_get_cursor(0)[1] - 1
+  end
+
+  local line = lines[end_row + 1] or ""
+  if closing_math_line(line, end_col) then
+    return end_row
+  end
+
+  local scan = end_row + 1
+  while scan < #lines do
+    local candidate = lines[scan + 1] or ""
+    if vim.trim(candidate) == "" then
+      scan = scan + 1
+    else
+      if closing_math_line(candidate) then
+        return scan
+      end
+      break
+    end
+  end
+  return end_row
+end
+
+function M.insert_math_block(text, selection, bufnr)
+  local buffer = bufnr or 0
+  local row = insert_row_after_math(buffer, selection)
+  local content = vim.split(tostring(text or ""), "\n", { plain = true })
+  local block = { "", "$$" }
+  for _, line in ipairs(content) do
+    block[#block + 1] = line
+  end
+  block[#block + 1] = "$$"
+  vim.api.nvim_buf_set_lines(buffer, row + 1, row + 1, false, block)
+  return row + 3
+end
+
 function M.show_result(response, options)
   options = options or {}
   local settings = config().results
@@ -214,6 +273,7 @@ function M.show_result(response, options)
   local replace_rhs = tostring(
     meta.replace_rhs or meta.replace or meta.replacement or result or display
   )
+  local block_text = tostring(meta.replace_full or result or display)
   if display == "" then
     M.warn("The backend returned an empty result")
     return
@@ -227,7 +287,13 @@ function M.show_result(response, options)
   local buffer = nil
   local window = nil
   if settings.window ~= false then
-    buffer, window = M.open_float(display, {
+    local float_lines = split_lines(display)
+    if settings.show_help ~= false and settings.actions then
+      float_lines[#float_lines + 1] = ""
+      float_lines[#float_lines + 1] =
+        "y copy | Y copy rhs | i insert | r replace | R replace rhs | a append block | q close"
+    end
+    buffer, window = M.open_float(float_lines, {
       title = title,
       border = settings.border,
       title_pos = settings.title_pos,
@@ -308,6 +374,22 @@ function M.show_result(response, options)
       silent = true,
       nowait = true,
       desc = "Replace source with the full latex-eval result",
+    })
+
+    vim.keymap.set("n", "a", function()
+      local row = M.insert_math_block(
+        block_text,
+        options.selection,
+        source_buf
+      )
+      pcall(vim.api.nvim_win_set_cursor, source_win, { row + 1, 0 })
+      M.info("Added a new math block below")
+      close()
+    end, {
+      buffer = buffer,
+      silent = true,
+      nowait = true,
+      desc = "Add result as a new math block below",
     })
 
     vim.keymap.set("n", "R", function()

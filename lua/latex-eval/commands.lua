@@ -125,6 +125,27 @@ function M.setup()
     desc = "Store a definition from detected math or as an argument",
   })
 
+  vim.api.nvim_create_user_command("LatexEvalWrap", function(command)
+    local preset = vim.trim(command.args or "")
+    if preset == "" then
+      require("latex-eval.wrap").menu()
+      return
+    end
+    require("latex-eval.wrap").wrap(preset)
+  end, {
+    nargs = "?",
+    complete = function(argument_lead)
+      local matches = {}
+      for _, name in ipairs(require("latex-eval.wrap").names()) do
+        if name:sub(1, #argument_lead) == argument_lead then
+          matches[#matches + 1] = name
+        end
+      end
+      return matches
+    end,
+    desc = "Wrap detected/selected math in a LaTeX command",
+  })
+
   vim.api.nvim_create_user_command("LatexEvalDefs", function()
     require("latex-eval.definitions_buffer").open()
   end, {

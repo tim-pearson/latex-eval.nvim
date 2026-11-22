@@ -32,6 +32,7 @@ Requires Neovim 0.10 or newer.
 - Configurable commands, keymaps, result behavior, and definition paths.
 - Optional Treesitter-assisted math detection.
 - Join separate `$$` blocks into `align*`, and split them back again.
+- Wrap math in `\boxed`, `\underbrace`, `\cancel`, and other commands.
 - Edit stored definitions in a Markdown buffer and save with `:w`.
 
 ---
@@ -109,7 +110,12 @@ Defaults use `<leader>b`:
 | `<leader>bd` | Store definition |
 | `<leader>bf` | Differentiate |
 | `<leader>bj` | Join/split aligned math |
-| `<leader>bl` | List/manage definitions |
+| `<leader>bw` | Wrap math menu |
+| `<leader>bx` | Wrap in `\boxed{...}` |
+| `<leader>bu` | Wrap in `\underbrace{...}` |
+| `<leader>bo` | Wrap in `\overbrace{...}` |
+| `<leader>bc` | Wrap in `\cancel{...}` |
+| `<leader>bl` | Open definitions buffer |
 | `<leader>bh` | Health check |
 
 Evaluate, simplify, solve, differentiate, define, and join/split work in normal
@@ -133,6 +139,7 @@ mappings. Existing mappings are not overwritten; a warning is shown instead.
 | `:LatexEvalJoinMath` | Join separate `$$` blocks into an `align*` environment. |
 | `:LatexEvalSplitMath` | Split an `align`/`gather` environment into separate `$$` blocks. |
 | `:LatexEvalToggleAlign` | Toggle between separate blocks and an aligned environment. |
+| `:LatexEvalWrap [preset]` | Wrap detected/selected math; opens a menu when no preset is given. |
 | `:LatexEvalDefs` | Open an editable Markdown buffer of all definitions. |
 | `:LatexEvalInstall` | Install or repair the isolated Python environment. |
 | `:LatexEvalHealth` | Report Python version, venv path, dependency versions, imports, and backend status. |
@@ -187,7 +194,11 @@ In the result window:
 | `i` | Insert the displayed result after the source line |
 | `r` | Replace the source with the full displayed result |
 | `R` | Replace only the source right-hand side |
+| `a` | Add the full result as a new `$$` math block underneath |
 | `q` / `<Esc>` | Close |
+
+The result window also shows a short keybinding help line by default. Disable it
+with `results.show_help = false`.
 
 Replacement targets only the expression source range. It preserves:
 
@@ -295,6 +306,24 @@ conversion remains reversible. Surrounding prose is protected: the command
 refuses to join or split a mixed region. Visual mode operates on the selected
 lines; normal mode operates on the math around the cursor.
 
+## Wrapping math
+
+Use `<leader>bw` or `:LatexEvalWrap` to choose a wrapper. Direct default
+keybindings are provided for:
+
+- `\boxed{...}` — `<leader>bx`
+- `\underbrace{...}` — `<leader>bu`
+- `\overbrace{...}` — `<leader>bo`
+- `\cancel{...}` — `<leader>bc`
+
+The menu also includes `\sqrt{...}`, `\text{...}`, `\overline{...}`,
+`\underline{...}`, `\hat{...}`, `\bar{...}`, `\vec{...}`, `\tilde{...}`,
+`\dot{...}`, `\ddot{...}`, `\mathbf{...}`, `\mathrm{...}`, and
+`\operatorname{...}`.
+
+Wrapping replaces only the mathematical source, so surrounding `$`, `$$`,
+`\(`/`\)`, `\[`/`\]`, and environment delimiters are preserved.
+
 ## Stored definitions
 
 Definitions are stored as JSON.
@@ -371,6 +400,11 @@ require("latex-eval").setup({
       define = "d",
       differentiate = "f",
       align = "j",
+      wrap_menu = "w",
+      wrap_boxed = "x",
+      wrap_underbrace = "u",
+      wrap_overbrace = "o",
+      wrap_cancel = "c",
       definitions = "l",
       health = "h",
     },
@@ -394,6 +428,7 @@ require("latex-eval").setup({
     inline = false,
     inline_mode = "eol",
     actions = true,
+    show_help = true,
     max_width = 80,
     max_height = 20,
     border = "rounded",
@@ -459,6 +494,8 @@ require("latex-eval").simplify()
 require("latex-eval").solve()
 require("latex-eval").differentiate()
 require("latex-eval").define()
+require("latex-eval").wrap("boxed")
+require("latex-eval").wrap_menu()
 require("latex-eval").toggle_align()
 require("latex-eval").join_math()
 require("latex-eval").split_math()

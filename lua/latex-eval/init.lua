@@ -71,6 +71,16 @@ function M.preview()
   )
 end
 
+function M.wrap(name, options)
+  ensure()
+  require("latex-eval.wrap").wrap(name, options)
+end
+
+function M.wrap_menu(options)
+  ensure()
+  require("latex-eval.wrap").menu(options)
+end
+
 function M.toggle_align()
   ensure()
   require("latex-eval.transform").toggle()

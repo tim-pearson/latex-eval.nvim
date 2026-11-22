@@ -72,6 +72,46 @@ local function action_specs()
       end,
     },
     {
+      name = "wrap_menu",
+      modes = { "n", "x" },
+      description = "Wrap math in a LaTeX command",
+      run = function()
+        require("latex-eval").wrap_menu()
+      end,
+    },
+    {
+      name = "wrap_boxed",
+      modes = { "n", "x" },
+      description = "Wrap math in \\boxed{...}",
+      run = function()
+        require("latex-eval").wrap("boxed")
+      end,
+    },
+    {
+      name = "wrap_underbrace",
+      modes = { "n", "x" },
+      description = "Wrap math in \\underbrace{...}",
+      run = function()
+        require("latex-eval").wrap("underbrace")
+      end,
+    },
+    {
+      name = "wrap_overbrace",
+      modes = { "n", "x" },
+      description = "Wrap math in \\overbrace{...}",
+      run = function()
+        require("latex-eval").wrap("overbrace")
+      end,
+    },
+    {
+      name = "wrap_cancel",
+      modes = { "n", "x" },
+      description = "Wrap math in \\cancel{...}",
+      run = function()
+        require("latex-eval").wrap("cancel")
+      end,
+    },
+    {
       name = "definitions",
       modes = { "n" },
       description = "Manage latex-eval definitions",

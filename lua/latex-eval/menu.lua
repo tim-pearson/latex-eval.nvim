@@ -52,6 +52,13 @@ local actions = {
     end,
   },
   {
+    label = "Wrap math",
+    description = "boxed, underbrace, cancel, and more",
+    run = function()
+      require("latex-eval").wrap_menu()
+    end,
+  },
+  {
     label = "Manage definitions",
     description = "edit stored definitions in a Markdown buffer",
     run = function()
